@@ -6,9 +6,29 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 
+interface Article {
+  title: string;
+  description: string;
+  url: string;
+  urlToImage: string;
+  publishedAt: string;
+  source: {
+    name: string;
+  };
+  author: string;
+}
+
+interface Track {
+  id: string;
+  trackName: string;
+  artistName: string;
+  albumName: string;
+  duration: number;
+}
+
 export function FavoritesSection() {
-  const [favoriteArticles, setFavoriteArticles] = useState([]);
-  const [favoriteTracks, setFavoriteTracks] = useState([]);
+  const [favoriteArticles, setFavoriteArticles] = useState<Article[]>([]);
+  const [favoriteTracks, setFavoriteTracks] = useState<Track[]>([]);
   const [activeTab, setActiveTab] = useState('news');
   const { toast } = useToast();
 
@@ -17,41 +37,70 @@ export function FavoritesSection() {
   }, []);
 
   const loadFavorites = () => {
-    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-    const musicFavorites = JSON.parse(localStorage.getItem('musicFavorites') || '[]');
-    
-    // In a real app, you'd fetch the full article/track data based on the IDs
-    // For now, we'll show placeholder data
-    setFavoriteArticles(favorites.map((url, index) => ({
-      title: `Favorite Article ${index + 1}`,
-      url,
-      source: { name: 'Various Sources' },
-      publishedAt: new Date().toISOString(),
-    })));
-    
-    setFavoriteTracks(musicFavorites.map((id, index) => ({
-      id,
-      trackName: `Favorite Track ${index + 1}`,
-      artistName: 'Various Artists',
-      albumName: 'Various Albums',
-      duration: 180 + index * 10,
-    })));
+    try {
+      // Load favorite articles
+      const storedArticles = localStorage.getItem('favoriteArticles');
+      if (storedArticles) {
+        setFavoriteArticles(JSON.parse(storedArticles));
+      }
+
+      // Load favorite tracks
+      const storedTracks = localStorage.getItem('musicFavorites');
+      if (storedTracks) {
+        const trackIds = JSON.parse(storedTracks);
+        // Convert IDs to track objects (in a real app, you'd fetch full data)
+        const tracks = trackIds.map((id: string, index: number) => ({
+          id,
+          trackName: `Favorite Track ${index + 1}`,
+          artistName: 'Various Artists',
+          albumName: 'Various Albums',
+          duration: 180 + index * 10,
+        }));
+        setFavoriteTracks(tracks);
+      }
+    } catch (error) {
+      console.error('Error loading favorites:', error);
+    }
   };
 
-  const removeFavorite = (identifier, type) => {
-    const storageKey = type === 'news' ? 'favorites' : 'musicFavorites';
-    const current = JSON.parse(localStorage.getItem(storageKey) || '[]');
-    const updated = current.filter(item => item !== identifier);
-    localStorage.setItem(storageKey, JSON.stringify(updated));
-    
-    loadFavorites();
-    toast({
-      title: 'Removed from favorites',
-      description: `${type === 'news' ? 'Article' : 'Track'} removed successfully.`,
-    });
+  const removeFavorite = (identifier: string, type: 'news' | 'music') => {
+    try {
+      if (type === 'news') {
+        // Remove from favorites list
+        const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+        const updatedFavorites = favorites.filter((url: string) => url !== identifier);
+        localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+        
+        // Remove from articles list
+        const articles = JSON.parse(localStorage.getItem('favoriteArticles') || '[]');
+        const updatedArticles = articles.filter((article: Article) => article.url !== identifier);
+        localStorage.setItem('favoriteArticles', JSON.stringify(updatedArticles));
+        
+        setFavoriteArticles(updatedArticles);
+      } else {
+        // Remove music favorite
+        const musicFavorites = JSON.parse(localStorage.getItem('musicFavorites') || '[]');
+        const updatedMusicFavorites = musicFavorites.filter((id: string) => id !== identifier);
+        localStorage.setItem('musicFavorites', JSON.stringify(updatedMusicFavorites));
+        
+        setFavoriteTracks(prev => prev.filter(track => track.id !== identifier));
+      }
+      
+      toast({
+        title: 'Removed from favorites',
+        description: `${type === 'news' ? 'Article' : 'Track'} removed successfully.`,
+      });
+    } catch (error) {
+      console.error('Error removing favorite:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to remove from favorites.',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const formatDuration = (seconds) => {
+  const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
@@ -103,7 +152,7 @@ export function FavoritesSection() {
           ) : (
             favoriteArticles.map((article, index) => (
               <Card 
-                key={index}
+                key={`${article.url}-${index}`}
                 className="group hover:shadow-lg transition-all duration-200 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200 dark:border-slate-700"
               >
                 <CardContent className="p-4">
@@ -112,6 +161,11 @@ export function FavoritesSection() {
                       <h3 className="font-semibold text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                         {article.title}
                       </h3>
+                      {article.description && (
+                        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">
+                          {article.description}
+                        </p>
+                      )}
                       <div className="flex items-center gap-2 mt-2">
                         <Badge variant="outline" className="text-xs">
                           {article.source.name}
@@ -164,7 +218,7 @@ export function FavoritesSection() {
           ) : (
             favoriteTracks.map((track, index) => (
               <Card 
-                key={index}
+                key={`${track.id}-${index}`}
                 className="group hover:shadow-lg transition-all duration-200 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200 dark:border-slate-700"
               >
                 <CardContent className="p-4">

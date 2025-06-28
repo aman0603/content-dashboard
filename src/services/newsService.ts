@@ -18,6 +18,20 @@ interface NewsResponse {
   articles: NewsArticle[];
 }
 
+// Try to fetch from NewsAPI directly (will work in production with proper CORS setup)
+const fetchRealNews = async (category: string = 'general'): Promise<NewsResponse> => {
+  const apiKey = 'a698132e2ac5407885d1b7bab0f36d9b';
+  const url = `https://newsapi.org/v2/top-headlines?country=us&category=${category}&apiKey=${apiKey}&pageSize=20`;
+  
+  const response = await fetch(url);
+  
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  
+  return await response.json();
+};
+
 // Mock data for different categories
 const mockArticles: Record<string, NewsArticle[]> = {
   general: [
@@ -128,27 +142,13 @@ const mockArticles: Record<string, NewsArticle[]> = {
 
 export const fetchNews = async (category: string = 'general'): Promise<NewsResponse> => {
   try {
-    // Try to fetch from our API route first
-    const response = await fetch(`/api/news?category=${category}`);
-    
-    if (response.ok) {
-      const data = await response.json();
-      return data;
-    }
-    
-    // Fallback to mock data if API fails
-    console.log('Falling back to mock data due to API limitations');
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    const articles = mockArticles[category] || mockArticles.general;
-    
-    return {
-      status: 'ok',
-      totalResults: articles.length,
-      articles: articles
-    };
+    // Try real NewsAPI first (this will fail due to CORS in development)
+    console.log(`Attempting to fetch real news for category: ${category}`);
+    const realData = await fetchRealNews(category);
+    console.log(`Successfully fetched ${realData.articles.length} real articles`);
+    return realData;
   } catch (error) {
-    console.error('News fetch error:', error);
+    console.log('Real NewsAPI failed, using mock data:', error);
     
     // Fallback to mock data
     await new Promise(resolve => setTimeout(resolve, 800));
@@ -160,19 +160,4 @@ export const fetchNews = async (category: string = 'general'): Promise<NewsRespo
       articles: articles
     };
   }
-};
-
-// For production, you would implement the real NewsAPI call here
-// but only after setting up a backend proxy to handle CORS
-export const fetchRealNews = async (category: string = 'general'): Promise<NewsResponse> => {
-  const apiKey = 'a698132e2ac5407885d1b7bab0f36d9b';
-  const url = `https://newsapi.org/v2/top-headlines?country=us&category=${category}&apiKey=${apiKey}&pageSize=20`;
-  
-  const response = await fetch(url);
-  
-  if (!response.ok) {
-    throw new Error('Failed to fetch news');
-  }
-  
-  return await response.json();
 };

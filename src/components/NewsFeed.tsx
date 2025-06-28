@@ -38,10 +38,18 @@ export function NewsFeed() {
   ];
 
   useEffect(() => {
-    const storedFavorites = localStorage.getItem('favorites');
-    if (storedFavorites) {
-      setFavorites(JSON.parse(storedFavorites));
-    }
+    const loadFavorites = () => {
+      try {
+        const storedFavorites = localStorage.getItem('favorites');
+        if (storedFavorites) {
+          setFavorites(JSON.parse(storedFavorites));
+        }
+      } catch (error) {
+        console.error('Error loading favorites:', error);
+      }
+    };
+    
+    loadFavorites();
   }, []);
 
   useEffect(() => {
@@ -50,12 +58,12 @@ export function NewsFeed() {
 
   const fetchNewsData = async () => {
     setLoading(true);
+    setError('');
     try {
       console.log(`Fetching news for category: ${selectedCategory}`);
       const data = await fetchNews(selectedCategory);
       console.log(`Received ${data.articles.length} articles`);
       setArticles(data.articles || []);
-      setError('');
     } catch (err) {
       setError('Failed to load news articles. Please try again later.');
       console.error('News fetch error:', err);
@@ -64,18 +72,40 @@ export function NewsFeed() {
     }
   };
 
-  const toggleFavorite = (articleUrl: string) => {
-    const newFavorites = favorites.includes(articleUrl)
-      ? favorites.filter(url => url !== articleUrl)
-      : [...favorites, articleUrl];
-    
-    setFavorites(newFavorites);
-    localStorage.setItem('favorites', JSON.stringify(newFavorites));
-    
-    toast({
-      title: favorites.includes(articleUrl) ? 'Removed from favorites' : 'Added to favorites',
-      description: 'Your preferences have been updated.',
-    });
+  const toggleFavorite = (article: Article) => {
+    try {
+      const articleId = article.url;
+      const newFavorites = favorites.includes(articleId)
+        ? favorites.filter(url => url !== articleId)
+        : [...favorites, articleId];
+      
+      setFavorites(newFavorites);
+      localStorage.setItem('favorites', JSON.stringify(newFavorites));
+      
+      // Also store the full article data for the favorites section
+      const storedArticles = JSON.parse(localStorage.getItem('favoriteArticles') || '[]');
+      if (!favorites.includes(articleId)) {
+        // Adding to favorites
+        const updatedArticles = [...storedArticles, article];
+        localStorage.setItem('favoriteArticles', JSON.stringify(updatedArticles));
+      } else {
+        // Removing from favorites
+        const updatedArticles = storedArticles.filter((a: Article) => a.url !== articleId);
+        localStorage.setItem('favoriteArticles', JSON.stringify(updatedArticles));
+      }
+      
+      toast({
+        title: favorites.includes(articleId) ? 'Removed from favorites' : 'Added to favorites',
+        description: 'Your preferences have been updated.',
+      });
+    } catch (error) {
+      console.error('Error managing favorites:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update favorites. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const shareArticle = async (article: Article) => {
@@ -89,11 +119,20 @@ export function NewsFeed() {
         console.error('Share failed:', err);
       }
     } else {
-      navigator.clipboard.writeText(article.url);
-      toast({
-        title: 'Link copied!',
-        description: 'Article link has been copied to clipboard.',
-      });
+      try {
+        await navigator.clipboard.writeText(article.url);
+        toast({
+          title: 'Link copied!',
+          description: 'Article link has been copied to clipboard.',
+        });
+      } catch (err) {
+        console.error('Copy failed:', err);
+        toast({
+          title: 'Share failed',
+          description: 'Unable to copy link to clipboard.',
+          variant: 'destructive',
+        });
+      }
     }
   };
 
@@ -168,7 +207,7 @@ export function NewsFeed() {
       {/* Articles Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {articles.map((article, index) => (
-          <Card key={index} className="group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200 dark:border-slate-700">
+          <Card key={`${article.url}-${index}`} className="group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200 dark:border-slate-700">
             {article.urlToImage && (
               <div className="relative overflow-hidden rounded-t-lg">
                 <img
@@ -213,7 +252,7 @@ export function NewsFeed() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => toggleFavorite(article.url)}
+                    onClick={() => toggleFavorite(article)}
                     className={`rounded-full p-2 ${
                       favorites.includes(article.url)
                         ? 'text-red-500 hover:text-red-600'
