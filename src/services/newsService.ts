@@ -127,16 +127,39 @@ const mockArticles: Record<string, NewsArticle[]> = {
 };
 
 export const fetchNews = async (category: string = 'general'): Promise<NewsResponse> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 800));
-  
-  const articles = mockArticles[category] || mockArticles.general;
-  
-  return {
-    status: 'ok',
-    totalResults: articles.length,
-    articles: articles
-  };
+  try {
+    // Try to fetch from our API route first
+    const response = await fetch(`/api/news?category=${category}`);
+    
+    if (response.ok) {
+      const data = await response.json();
+      return data;
+    }
+    
+    // Fallback to mock data if API fails
+    console.log('Falling back to mock data due to API limitations');
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    const articles = mockArticles[category] || mockArticles.general;
+    
+    return {
+      status: 'ok',
+      totalResults: articles.length,
+      articles: articles
+    };
+  } catch (error) {
+    console.error('News fetch error:', error);
+    
+    // Fallback to mock data
+    await new Promise(resolve => setTimeout(resolve, 800));
+    const articles = mockArticles[category] || mockArticles.general;
+    
+    return {
+      status: 'ok',
+      totalResults: articles.length,
+      articles: articles
+    };
+  }
 };
 
 // For production, you would implement the real NewsAPI call here

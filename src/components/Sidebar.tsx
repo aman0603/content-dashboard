@@ -45,7 +45,9 @@ export function Sidebar({ activeSection, onSectionChange, isAuthenticated }: Sid
   return (
     <SidebarUI className={`${isCollapsed ? 'w-16' : 'w-64'} transition-all duration-300 bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg border-r border-slate-200 dark:border-slate-700`}>
       <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-        <SidebarTrigger className="mb-2" />
+        <div className="flex items-center justify-between mb-2">
+          <SidebarTrigger />
+        </div>
         {!isCollapsed && (
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
@@ -102,6 +104,13 @@ export function Sidebar({ activeSection, onSectionChange, isAuthenticated }: Sid
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      {/* Always visible toggle button when collapsed */}
+      {isCollapsed && (
+        <div className="absolute top-4 -right-3 z-20">
+          <SidebarTrigger className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full shadow-md hover:shadow-lg transition-shadow" />
+        </div>
+      )}
     </SidebarUI>
   );
 }

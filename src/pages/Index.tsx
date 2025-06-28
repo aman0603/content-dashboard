@@ -9,7 +9,7 @@ import { FavoritesSection } from '@/components/FavoritesSection';
 import { SearchSection } from '@/components/SearchSection';
 import { UserSettings } from '@/components/UserSettings';
 import { AuthModal } from '@/components/AuthModal';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState('feed');
@@ -84,6 +84,11 @@ const Index = () => {
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'dark' : ''}`}>
       <SidebarProvider>
         <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-blue-900">
+          {/* Global sidebar trigger - always visible */}
+          <div className="fixed top-4 left-4 z-50 md:hidden">
+            <SidebarTrigger className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-md" />
+          </div>
+          
           <Sidebar 
             activeSection={activeSection} 
             onSectionChange={setActiveSection}
