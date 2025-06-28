@@ -39,13 +39,14 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeSection, onSectionChange, isAuthenticated }: SidebarProps) {
-  const { collapsed } = useSidebar();
+  const { state } = useSidebar();
+  const isCollapsed = state === 'collapsed';
 
   return (
-    <SidebarUI className={`${collapsed ? 'w-16' : 'w-64'} transition-all duration-300 bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg border-r border-slate-200 dark:border-slate-700`}>
+    <SidebarUI className={`${isCollapsed ? 'w-16' : 'w-64'} transition-all duration-300 bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg border-r border-slate-200 dark:border-slate-700`}>
       <div className="p-4 border-b border-slate-200 dark:border-slate-700">
         <SidebarTrigger className="mb-2" />
-        {!collapsed && (
+        {!isCollapsed && (
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">CD</span>
@@ -59,7 +60,7 @@ export function Sidebar({ activeSection, onSectionChange, isAuthenticated }: Sid
 
       <SidebarContent className="p-4">
         <SidebarGroup>
-          <SidebarGroupLabel className={`${collapsed ? 'sr-only' : ''} text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2`}>
+          <SidebarGroupLabel className={`${isCollapsed ? 'sr-only' : ''} text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2`}>
             Main Navigation
           </SidebarGroupLabel>
           
@@ -90,8 +91,8 @@ export function Sidebar({ activeSection, onSectionChange, isAuthenticated }: Sid
                         className="flex items-center space-x-3 p-3 w-full text-left"
                         disabled={needsAuth && !isAuthenticated}
                       >
-                        <item.icon className={`w-5 h-5 ${collapsed ? 'mx-auto' : ''}`} />
-                        {!collapsed && <span className="font-medium">{item.title}</span>}
+                        <item.icon className={`w-5 h-5 ${isCollapsed ? 'mx-auto' : ''}`} />
+                        {!isCollapsed && <span className="font-medium">{item.title}</span>}
                       </button>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

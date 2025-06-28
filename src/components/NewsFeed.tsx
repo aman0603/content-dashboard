@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { fetchNews } from '@/services/newsService';
 
 interface Article {
   title: string;
@@ -44,21 +45,15 @@ export function NewsFeed() {
   }, []);
 
   useEffect(() => {
-    fetchNews();
+    fetchNewsData();
   }, [selectedCategory]);
 
-  const fetchNews = async () => {
+  const fetchNewsData = async () => {
     setLoading(true);
     try {
-      const response = await fetch(
-        `https://newsapi.org/v2/top-headlines?country=us&category=${selectedCategory}&apiKey=a698132e2ac5407885d1b7bab0f36d9b&pageSize=20`
-      );
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch news');
-      }
-      
-      const data = await response.json();
+      console.log(`Fetching news for category: ${selectedCategory}`);
+      const data = await fetchNews(selectedCategory);
+      console.log(`Received ${data.articles.length} articles`);
       setArticles(data.articles || []);
       setError('');
     } catch (err) {
@@ -138,7 +133,7 @@ export function NewsFeed() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-3xl font-bold text-slate-800 dark:text-white">News Feed</h1>
-        <Button onClick={fetchNews} variant="outline" className="shrink-0">
+        <Button onClick={fetchNewsData} variant="outline" className="shrink-0">
           Refresh
         </Button>
       </div>
@@ -164,6 +159,9 @@ export function NewsFeed() {
       {error && (
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
           <p className="text-red-600 dark:text-red-400">{error}</p>
+          <p className="text-sm text-red-500 dark:text-red-300 mt-2">
+            Note: Using demo data due to NewsAPI CORS restrictions. In production, this would be resolved with a backend proxy.
+          </p>
         </div>
       )}
 
