@@ -17,17 +17,17 @@ A modern, responsive web application that serves as your personalized news and m
 ### 📸 Screenshots
 
 #### 🔐 Sign-In Page
-<img src="./public/screenshots/signin.png" alt="Sign-In Page" width="800"/>
+<img src="./public/ignin.png" alt="Sign-In Page" width="800"/>
 
 ---
 
 #### 📰 News Feed Page
-<img src="./public/screenshots/news.png" alt="News Feed Page" width="800"/>
+<img src="./public/news.png" alt="News Feed Page" width="800"/>
 
 ---
 
 #### 🎵 Music Section
-<img src="./public/screenshots/music.png" alt="Music Section" width="800"/>
+<img src="./public/music.png" alt="Music Section" width="800"/>
 
 ---
 
