@@ -6,17 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-
-interface LyricsResult {
-  id: number;
-  trackName: string;
-  artistName: string;
-  albumName: string;
-  duration: number;
-  instrumental: boolean;
-  plainLyrics: string;
-  syncedLyrics: string;
-}
+import { searchTracks, getTrackLyrics } from '@/services/musicService';
+import type { LyricsResult } from '@/services/musicService';
 
 export function MusicSection() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -37,17 +28,10 @@ export function MusicSection() {
     if (!searchQuery.trim()) return;
     
     setLoading(true);
+    setSelectedTrack(null);
     try {
-      const response = await fetch(
-        `https://lrclib.net/api/search?q=${encodeURIComponent(searchQuery)}`
-      );
-      
-      if (!response.ok) {
-        throw new Error('Failed to search lyrics');
-      }
-      
-      const data = await response.json();
-      setSearchResults(data.slice(0, 20)); // Limit to 20 results
+      const data = await searchTracks(searchQuery);
+      setSearchResults(data);
     } catch (err) {
       console.error('Lyrics search error:', err);
       toast({
@@ -63,16 +47,8 @@ export function MusicSection() {
   const getLyrics = async (track: LyricsResult) => {
     setLoading(true);
     try {
-      const response = await fetch(
-        `https://lrclib.net/api/get/${track.id}`
-      );
-      
-      if (!response.ok) {
-        throw new Error('Failed to get lyrics');
-      }
-      
-      const data = await response.json();
-      setSelectedTrack(data);
+      const trackDetails = await getTrackLyrics(track.id);
+      setSelectedTrack(trackDetails);
     } catch (err) {
       console.error('Get lyrics error:', err);
       toast({
