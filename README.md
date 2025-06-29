@@ -17,7 +17,7 @@ A modern, responsive web application that serves as your personalized news and m
 ### 📸 Screenshots
 
 #### 🔐 Sign-In Page
-<img src="./public/ignin.png" alt="Sign-In Page" width="800"/>
+<img src="./public/signin.png" alt="Sign-In Page" width="800"/>
 
 ---
 
